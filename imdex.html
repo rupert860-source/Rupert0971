@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>婚禮跑步遊戲 💖</title>
 <style>
-  body {
-    text-align: center;
-    font-family: "Noto Sans TC", sans-serif;
+  body { 
+    text-align: center; 
+    font-family: "Noto Sans TC", sans-serif; 
     background: linear-gradient(to bottom right, #ffe6f0, #fff);
     margin: 0;
     padding: 20px;
@@ -15,40 +15,29 @@
   h1 { color: #d63384; font-size: 2em; }
   .track {
     position: relative;
-    height: 80px;
-    margin: 20px auto;
+    height: 50px;
+    margin: 15px auto;
     width: 90%;
-    background: rgba(255,255,255,0.8);
-    border-radius: 12px;
-    border: 2px solid #f8a5c2;
-    overflow: hidden;
-  }
-  .progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, #ff9ec4, #ffd6e7);
-    border-radius: 12px 0 0 12px;
-    transition: width 0.1s;
-    z-index: 0;
+    border-bottom: 2px dashed #aaa;
+    background: rgba(255,255,255,0.7);
+    border-radius: 8px;
   }
   .runner {
     position: absolute;
-    bottom: 5px;
+    bottom: 0;
     font-size: 30px;
-    z-index: 2;
+    transition: left 0.1s;
   }
   .label {
     position: absolute;
-    bottom: 40px;
+    bottom: 35px;
     font-size: 14px;
     white-space: nowrap;
-    z-index: 2;
   }
+  #playersInput { margin-top: 20px; }
   #raceArea { margin-top: 30px; }
   button {
-    margin: 8px;
+    margin: 10px;
     padding: 10px 20px;
     font-size: 18px;
     border: none;
@@ -56,32 +45,22 @@
     background: #ff8fb1;
     color: white;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
   button:hover { background: #ff6fa2; }
-  #countdown { font-size: 40px; color: red; margin-top: 20px; font-weight: bold; }
-  #winner { font-size: 30px; color: #28a745; font-weight: bold; margin-top: 20px; }
-  #musicBtn { position: fixed; top: 10px; right: 10px; }
+  #countdown { font-size: 36px; color: red; margin-top: 20px; }
+  #winner { font-size: 28px; color: green; font-weight: bold; margin-top: 20px; }
 </style>
 </head>
 <body>
 
 <h1>🏃 婚禮點擊跑步比賽 💖</h1>
 
-<!-- 🎵 可愛背景音樂 -->
-<audio id="bgm" loop autoplay>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3e1c5c3c34.mp3?filename=cute-background-music-14085.mp3" type="audio/mpeg">
-</audio>
-<button id="musicBtn">🔊 音樂開關</button>
-
-<!-- 設定玩家 -->
 <div id="setupArea">
   <input id="playerNames" placeholder="請輸入玩家名字（以逗號分隔）" style="width:80%;font-size:16px;padding:6px;">
   <br>
   <button id="createBtn">建立玩家</button>
 </div>
 
-<!-- 遊戲區 -->
 <div id="gameArea" style="display:none;">
   <div id="raceArea"></div>
   <div id="countdown"></div>
@@ -95,62 +74,39 @@ let players = [];
 let steps = {};
 let gameStarted = false;
 let gameOver = false;
-const finishLine = 200; // ✅ 需要200步才能獲勝
+const finishLine = 100; // ✅ 跑到 100 步就贏
 
 const raceArea = document.getElementById("raceArea");
 const countdownDiv = document.getElementById("countdown");
 const winnerDiv = document.getElementById("winner");
-const bgm = document.getElementById("bgm");
-
-// 🔊 音樂開關
-document.getElementById("musicBtn").onclick = () => {
-  if (bgm.paused) {
-    bgm.play();
-    document.getElementById("musicBtn").innerText = "🔊 音樂開";
-  } else {
-    bgm.pause();
-    document.getElementById("musicBtn").innerText = "🔇 音樂關";
-  }
-};
 
 // 建立玩家
 document.getElementById("createBtn").onclick = () => {
   const names = document.getElementById("playerNames").value.split(",").map(n=>n.trim()).filter(n=>n);
   if (names.length === 0) return alert("請輸入至少一位玩家");
-
+  
   players = names;
   steps = {};
   raceArea.innerHTML = "";
-
-  names.forEach(name => {
+  
+  names.forEach((name, i) => {
     steps[name] = 0;
-
-    // 建立跑道
     let track = document.createElement("div");
     track.className = "track";
 
-    // 進度條
-    let progress = document.createElement("div");
-    progress.className = "progress";
-    progress.id = "progress-" + name;
-
-    // 跑者
     let runner = document.createElement("div");
     runner.className = "runner";
     runner.id = "runner-" + name;
     runner.innerText = "🏃";
 
-    // 名字
     let label = document.createElement("div");
     label.className = "label";
     label.innerText = name;
 
-    // 跑步按鈕
     let btn = document.createElement("button");
     btn.innerText = name + " 點我跑！";
     btn.onclick = () => move(name);
 
-    track.appendChild(progress);
     track.appendChild(runner);
     track.appendChild(label);
     raceArea.appendChild(track);
@@ -161,7 +117,6 @@ document.getElementById("createBtn").onclick = () => {
   document.getElementById("gameArea").style.display = "block";
 };
 
-// 玩家跑步
 function move(name) {
   if (!gameStarted || gameOver) return;
   steps[name] += 2;
@@ -169,20 +124,16 @@ function move(name) {
   if (steps[name] >= finishLine && !gameOver) {
     gameOver = true;
     winnerDiv.innerText = "🏆 " + name + " 獲勝啦！ 🎉";
-    confetti();
   }
 }
 
-// 更新畫面
 function updateRunner(name) {
-  let percent = Math.min((steps[name] / finishLine) * 100, 100);
+  let percent = Math.min((steps[name] / finishLine) * 90, 90);
   const runner = document.getElementById("runner-" + name);
-  const progress = document.getElementById("progress-" + name);
-  if (runner) runner.style.left = Math.min(percent, 90) + "%";
-  if (progress) progress.style.width = percent + "%";
+  if (runner) runner.style.left = percent + "%";
 }
 
-// 倒數開始
+// 開始遊戲
 document.getElementById("startBtn").onclick = () => {
   if (gameStarted) return;
   let count = 3;
@@ -209,28 +160,6 @@ document.getElementById("resetBtn").onclick = () => {
   gameOver = false;
   gameStarted = false;
 };
-
-// 🎊 彩帶特效
-function confetti() {
-  const duration = 1500;
-  const end = Date.now() + duration;
-  (function frame() {
-    const colors = ["#ff8fb1","#ffd6e7","#ffb6c1","#ff99cc"];
-    const confetti = document.createElement("div");
-    confetti.textContent = "💖";
-    confetti.style.position = "fixed";
-    confetti.style.left = Math.random()*100 + "%";
-    confetti.style.top = "-10px";
-    confetti.style.fontSize = Math.random()*20+20 + "px";
-    confetti.style.transition = "transform 2s linear, opacity 2s";
-    confetti.style.transform = `translateY(${window.innerHeight}px)`;
-    confetti.style.opacity = "0";
-    confetti.style.color = colors[Math.floor(Math.random()*colors.length)];
-    document.body.appendChild(confetti);
-    setTimeout(()=> confetti.remove(),2000);
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
 </script>
 </body>
 </html>
